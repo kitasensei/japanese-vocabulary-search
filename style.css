@@ -97,7 +97,8 @@ input {
   cursor: pointer;
 }
 
-#clearButton:active {
+#clearButton:active,
+.csv-button:active {
   transform: translateY(1px);
 }
 
@@ -105,6 +106,36 @@ input {
   margin: 8px 2px 0;
   color: #667085;
   font-size: 0.82rem;
+}
+
+.csv-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.csv-button {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid #c8d0da;
+  border-radius: 10px;
+  background: #eef2f6;
+  color: #344054;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.data-source {
+  min-width: 0;
+  margin: 0;
+  color: #667085;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
 }
 
 .results-header {
@@ -225,6 +256,33 @@ input {
 .error-message {
   border-color: #f0b6b6;
   color: #a12626;
+}
+
+.site-footer {
+  margin-top: 26px;
+  padding: 16px 8px 0;
+  border-top: 1px solid #dce3eb;
+  color: #7a8492;
+  font-size: 0.72rem;
+  line-height: 1.65;
+  text-align: center;
+  opacity: 1;
+  max-height: 120px;
+  overflow: hidden;
+  transition: opacity 0.45s ease, max-height 0.45s ease, margin-top 0.45s ease, padding-top 0.45s ease, border-color 0.45s ease;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+.site-footer.is-hidden {
+  margin-top: 0;
+  padding-top: 0;
+  border-color: transparent;
+  opacity: 0;
+  max-height: 0;
+  pointer-events: none;
 }
 
 @media (min-width: 640px) {
