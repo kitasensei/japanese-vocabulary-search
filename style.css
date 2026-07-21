@@ -1,0 +1,247 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Noto Sans Thai", sans-serif;
+  color: #1f2937;
+  background: #f5f7fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: max(20px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom));
+}
+
+.app-header {
+  margin-bottom: 18px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1.55rem, 6vw, 2rem);
+  line-height: 1.25;
+}
+
+.app-header p {
+  margin: 8px 0 0;
+  color: #5f6b7a;
+  font-size: 0.95rem;
+}
+
+.search-panel {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0 -4px 18px;
+  padding: 14px;
+  border: 1px solid #d9e0e8;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.search-label {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 700;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+#searchInput {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 13px;
+  border: 2px solid #b8c2ce;
+  border-radius: 12px;
+  background: #fff;
+  color: #111827;
+  font-size: 16px;
+  outline: none;
+}
+
+#searchInput:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+#clearButton {
+  min-height: 48px;
+  padding: 0 15px;
+  border: 1px solid #c8d0da;
+  border-radius: 12px;
+  background: #eef2f6;
+  color: #344054;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#clearButton:active {
+  transform: translateY(1px);
+}
+
+.search-help {
+  margin: 8px 2px 0;
+  color: #667085;
+  font-size: 0.82rem;
+}
+
+.results-header {
+  min-height: 28px;
+  margin-bottom: 9px;
+}
+
+#statusText {
+  margin: 0;
+  color: #475467;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.results {
+  display: grid;
+  gap: 12px;
+}
+
+.result-card {
+  padding: 16px;
+  border: 1px solid #dce3eb;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(31, 41, 55, 0.05);
+}
+
+.word-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.japanese {
+  min-width: 0;
+  margin: 0;
+  color: #111827;
+  font-size: 1.28rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.lesson {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  color: #174ea6;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.reading-row {
+  display: flex;
+  gap: 9px;
+  margin: 8px 0 0;
+  color: #475467;
+}
+
+.field-label {
+  flex: 0 0 auto;
+  color: #667085;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.reading {
+  overflow-wrap: anywhere;
+}
+
+.details {
+  display: grid;
+  gap: 10px;
+  margin: 15px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid #edf0f4;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr);
+  gap: 8px;
+}
+
+.detail[hidden] {
+  display: none;
+}
+
+.detail dt {
+  color: #667085;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.detail dd {
+  margin: 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.thai {
+  font-size: 1.05rem;
+}
+
+.empty-message,
+.error-message {
+  margin: 0;
+  padding: 26px 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #fff;
+  color: #667085;
+  text-align: center;
+}
+
+.error-message {
+  border-color: #f0b6b6;
+  color: #a12626;
+}
+
+@media (min-width: 640px) {
+  .app {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  .result-card {
+    padding: 18px 20px;
+  }
+
+  .details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .thai-reading-detail {
+    grid-column: 1 / -1;
+  }
+}
