@@ -34,6 +34,11 @@
         <input id="csvFileInput" type="file" accept=".csv,text/csv" hidden>
         <p id="dataSourceText" class="data-source">標準データ：data.csv</p>
       </div>
+
+      <fieldset class="display-settings">
+        <legend>表示する項目</legend>
+        <div id="displayOptions" class="display-options"></div>
+      </fieldset>
     </section>
 
     <section class="results-section" aria-live="polite" aria-busy="true">
@@ -56,20 +61,7 @@
         <span class="lesson"></span>
       </div>
       <p class="reading-row"><span class="field-label">読み</span><span class="reading"></span></p>
-      <dl class="details">
-        <div class="detail english-detail">
-          <dt>英語</dt>
-          <dd class="english"></dd>
-        </div>
-        <div class="detail thai-detail">
-          <dt>タイ語</dt>
-          <dd class="thai"></dd>
-        </div>
-        <div class="detail thai-reading-detail">
-          <dt>タイ語読み</dt>
-          <dd class="thai-reading"></dd>
-        </div>
-      </dl>
+      <dl class="details"></dl>
     </article>
   </template>
 
@@ -77,11 +69,42 @@
     'use strict';
 
     const DATA_FILE = 'data.csv';
+    const DISPLAY_SETTINGS_KEY = 'irodori-vocabulary-visible-fields';
+
+    // 表示項目を増やす場合は、この設定に1項目追加します。
+    // columnはCSVの左端を0とした列番号です。
+    const OPTIONAL_FIELDS = Object.freeze([
+      {
+        key: 'english',
+        label: '英語',
+        column: 3,
+        detailClass: 'english-detail',
+        valueClass: 'english',
+        showWhenEmpty: true
+      },
+      {
+        key: 'thai',
+        label: 'タイ語',
+        column: 4,
+        detailClass: 'thai-detail',
+        valueClass: 'thai',
+        showWhenEmpty: false
+      },
+      {
+        key: 'thaiReading',
+        label: 'タイ語カタカナ読み',
+        column: 5,
+        detailClass: 'thai-reading-detail',
+        valueClass: 'thai-reading',
+        showWhenEmpty: false
+      }
+    ]);
 
     const searchInput = document.getElementById('searchInput');
     const clearButton = document.getElementById('clearButton');
     const csvFileInput = document.getElementById('csvFileInput');
     const dataSourceText = document.getElementById('dataSourceText');
+    const displayOptions = document.getElementById('displayOptions');
     const statusText = document.getElementById('statusText');
     const results = document.getElementById('results');
     const resultsSection = document.querySelector('.results-section');
@@ -89,6 +112,57 @@
     const siteFooter = document.getElementById('siteFooter');
 
     let vocabulary = [];
+    let fieldVisibility = {};
+
+    function loadFieldVisibility() {
+      try {
+        const savedSettings = JSON.parse(localStorage.getItem(DISPLAY_SETTINGS_KEY));
+        return savedSettings && typeof savedSettings === 'object' ? savedSettings : {};
+      } catch (error) {
+        console.warn('表示設定を読み込めませんでした。', error);
+        return {};
+      }
+    }
+
+    function isFieldVisible(field) {
+      return fieldVisibility[field.key] ?? true;
+    }
+
+    function saveFieldVisibility() {
+      try {
+        localStorage.setItem(DISPLAY_SETTINGS_KEY, JSON.stringify(fieldVisibility));
+      } catch (error) {
+        console.warn('表示設定を保存できませんでした。', error);
+      }
+    }
+
+    function renderDisplayOptions() {
+      const fragment = document.createDocumentFragment();
+
+      OPTIONAL_FIELDS.forEach(field => {
+        const label = document.createElement('label');
+        label.className = 'display-option';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = isFieldVisible(field);
+        checkbox.dataset.fieldKey = field.key;
+
+        const labelText = document.createElement('span');
+        labelText.textContent = field.label;
+
+        checkbox.addEventListener('change', () => {
+          fieldVisibility[field.key] = checkbox.checked;
+          saveFieldVisibility();
+          renderResults();
+        });
+
+        label.append(checkbox, labelText);
+        fragment.appendChild(label);
+      });
+
+      displayOptions.replaceChildren(fragment);
+    }
 
     function normalizeText(value) {
       return String(value ?? '')
@@ -145,14 +219,17 @@
     }
 
     function rowToEntry(row) {
-      return {
+      const entry = {
         japanese: (row[0] ?? '').trim(),
         reading: (row[1] ?? '').trim(),
-        lesson: (row[2] ?? '').trim(),
-        english: (row[3] ?? '').trim(),
-        thai: (row[4] ?? '').trim(),
-        thaiReading: (row[5] ?? '').trim()
+        lesson: (row[2] ?? '').trim()
       };
+
+      OPTIONAL_FIELDS.forEach(field => {
+        entry[field.key] = (row[field.column] ?? '').trim();
+      });
+
+      return entry;
     }
 
     function applyCsvText(csvText, sourceLabel) {
@@ -172,27 +249,40 @@
       renderResults();
     }
 
-    function setOptionalField(card, selector, value) {
-      const detail = card.querySelector(selector);
-      if (!value) {
-        detail.hidden = true;
-        return;
-      }
-      detail.querySelector('dd').textContent = value;
-    }
-
     function createResultCard(entry) {
       const card = cardTemplate.content.cloneNode(true);
       const article = card.querySelector('.result-card');
+      const details = article.querySelector('.details');
 
       article.querySelector('.japanese').textContent = entry.japanese;
       article.querySelector('.lesson').textContent = entry.lesson;
       article.querySelector('.reading').textContent = entry.reading || '—';
-      article.querySelector('.english').textContent = entry.english || '—';
 
-      setOptionalField(article, '.thai-detail', entry.thai);
-      setOptionalField(article, '.thai-reading-detail', entry.thaiReading);
+      OPTIONAL_FIELDS.forEach(field => {
+        if (!isFieldVisible(field)) {
+          return;
+        }
 
+        const value = entry[field.key];
+        if (!value && !field.showWhenEmpty) {
+          return;
+        }
+
+        const detail = document.createElement('div');
+        detail.className = `detail ${field.detailClass}`;
+
+        const term = document.createElement('dt');
+        term.textContent = field.label;
+
+        const description = document.createElement('dd');
+        description.className = field.valueClass;
+        description.textContent = value || '—';
+
+        detail.append(term, description);
+        details.appendChild(detail);
+      });
+
+      details.hidden = details.childElementCount === 0;
       return card;
     }
 
@@ -291,6 +381,8 @@
       loadSelectedCsv(event.target.files[0]);
     });
 
+    fieldVisibility = loadFieldVisibility();
+    renderDisplayOptions();
     loadDefaultVocabulary();
   </script>
 </body>
