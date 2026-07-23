@@ -15,6 +15,11 @@
     </header>
 
     <section class="search-panel" aria-label="単語検索">
+      <div id="databaseControls" class="database-controls" hidden>
+        <label class="database-label" for="databaseSelect">データベース</label>
+        <select id="databaseSelect"></select>
+      </div>
+
       <label class="search-label" for="searchInput">日本語・ひらがな</label>
       <div class="search-row">
         <input
@@ -68,7 +73,11 @@
   <script>
     'use strict';
 
-    const DATA_FILE = 'data.csv';
+    const DATABASES = Object.freeze([
+      { file: 'data.csv', label: 'data.csv', required: true },
+      { file: 'data1.csv', label: 'data1.csv', required: false }
+    ]);
+    const DATABASE_SETTINGS_KEY = 'irodori-vocabulary-selected-database';
     const DISPLAY_SETTINGS_KEY = 'irodori-vocabulary-visible-fields';
 
     // 表示項目を増やす場合は、この設定に1項目追加します。
@@ -100,6 +109,8 @@
       }
     ]);
 
+    const databaseControls = document.getElementById('databaseControls');
+    const databaseSelect = document.getElementById('databaseSelect');
     const searchInput = document.getElementById('searchInput');
     const clearButton = document.getElementById('clearButton');
     const csvFileInput = document.getElementById('csvFileInput');
@@ -113,6 +124,8 @@
 
     let vocabulary = [];
     let fieldVisibility = {};
+    let availableDatabases = [];
+    const databaseCsvTexts = new Map();
 
     function loadFieldVisibility() {
       try {
@@ -325,15 +338,90 @@
       results.appendChild(fragment);
     }
 
-    async function loadDefaultVocabulary() {
+    function loadSavedDatabaseFile() {
       try {
-        const response = await fetch(`${DATA_FILE}?v=${Date.now()}`, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`CSVの読み込みに失敗しました（${response.status}）`);
-        }
+        return localStorage.getItem(DATABASE_SETTINGS_KEY);
+      } catch (error) {
+        console.warn('データベースの選択を読み込めませんでした。', error);
+        return null;
+      }
+    }
 
-        const csvText = await response.text();
-        applyCsvText(csvText, '標準データ：data.csv');
+    function saveSelectedDatabase(file) {
+      try {
+        localStorage.setItem(DATABASE_SETTINGS_KEY, file);
+      } catch (error) {
+        console.warn('データベースの選択を保存できませんでした。', error);
+      }
+    }
+
+    function renderDatabaseOptions() {
+      const fragment = document.createDocumentFragment();
+
+      availableDatabases.forEach(database => {
+        const option = document.createElement('option');
+        option.value = database.file;
+        option.textContent = database.label;
+        fragment.appendChild(option);
+      });
+
+      databaseSelect.replaceChildren(fragment);
+      databaseControls.hidden = availableDatabases.length < 2;
+    }
+
+    function applyDatabase(database) {
+      const csvText = databaseCsvTexts.get(database.file);
+      if (!csvText) {
+        throw new Error(`${database.file}のデータがありません。`);
+      }
+
+      databaseSelect.value = database.file;
+      applyCsvText(csvText, `データベース：${database.label}`);
+    }
+
+    async function loadAvailableDatabases() {
+      try {
+        const loadedDatabases = await Promise.all(
+          DATABASES.map(async database => {
+            const response = await fetch(
+              `${database.file}?v=${Date.now()}`,
+              { cache: 'no-store' }
+            );
+
+            if (!response.ok) {
+              if (database.required) {
+                throw new Error(
+                  `${database.file}の読み込みに失敗しました（${response.status}）`
+                );
+              }
+              return null;
+            }
+
+            return {
+              database,
+              csvText: await response.text()
+            };
+          })
+        );
+
+        databaseCsvTexts.clear();
+        availableDatabases = loadedDatabases
+          .filter(Boolean)
+          .map(loaded => {
+            databaseCsvTexts.set(loaded.database.file, loaded.csvText);
+            return loaded.database;
+          });
+
+        renderDatabaseOptions();
+
+        const savedFile = availableDatabases.length > 1
+          ? loadSavedDatabaseFile()
+          : null;
+        const initialDatabase =
+          availableDatabases.find(database => database.file === savedFile) ??
+          availableDatabases[0];
+
+        applyDatabase(initialDatabase);
       } catch (error) {
         console.error(error);
         resultsSection.setAttribute('aria-busy', 'false');
@@ -369,6 +457,20 @@
       }
     }
 
+    databaseSelect.addEventListener('change', () => {
+      const selectedDatabase = availableDatabases.find(
+        database => database.file === databaseSelect.value
+      );
+
+      if (!selectedDatabase) {
+        return;
+      }
+
+      saveSelectedDatabase(selectedDatabase.file);
+      applyDatabase(selectedDatabase);
+      searchInput.focus();
+    });
+
     searchInput.addEventListener('input', renderResults);
 
     clearButton.addEventListener('click', () => {
@@ -383,7 +485,7 @@
 
     fieldVisibility = loadFieldVisibility();
     renderDisplayOptions();
-    loadDefaultVocabulary();
+    loadAvailableDatabases();
   </script>
 </body>
 </html>
