@@ -57,10 +57,48 @@ input {
   backdrop-filter: blur(10px);
 }
 
+.database-controls {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.database-controls[hidden] {
+  display: none;
+}
+
+.database-label,
 .search-label {
   display: block;
-  margin-bottom: 7px;
   font-weight: 700;
+}
+
+.database-label {
+  color: #475467;
+  font-size: 0.86rem;
+}
+
+.search-label {
+  margin-bottom: 7px;
+}
+
+#databaseSelect {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 38px 9px 12px;
+  border: 1px solid #b8c2ce;
+  border-radius: 10px;
+  background: #fff;
+  color: #111827;
+  font-size: 16px;
+}
+
+#databaseSelect:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .search-row {
